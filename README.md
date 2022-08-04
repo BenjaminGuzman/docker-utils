@@ -43,6 +43,18 @@ WARNING: this will delete all images that are not being used (ie a container wit
 docker image prune
 ```
 
+**Export image** to tar file
+
+```shell
+docker image save image_name > image_name.img.tar
+```
+
+**Image load** from tar file
+
+```shell
+docker image load < image_name.img.tar
+```
+
 ## Exec vs shell form
 
 **Exec form**: is NOT executed inside a shell
@@ -79,29 +91,29 @@ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v $(which dock
 
 ```
 # Stage 1. Build cache and ensure the code passes all tests
-FROM node:12 as builder
+FROM node:18 as builder
 COPY ["package.json", "package-lock.json", "/usr/src/"]
 
 WORKDIR /usr/src
-RUN npm install --only=production
+RUN npm install --omit=dev
 
 COPY [".", "/usr/src/"]
-RUN npm install --only=development
+RUN npm install --omit=dev
 
 RUN npm run test
 
 # Stage 2. Build production image and use the cached layers
-FROM node:12
+FROM node:18-alpine3.15
 
 COPY ["package.json", "package-lock.json", "/usr/src/"]
 
 WORKDIR /usr/src
-RUN npm install --only=production
+RUN npm install --omit=dev
 
 COPY --from=builder ["/usr/src/index.js", "/usr/src/"]
 EXPOSE 3000
 
-CMD ["node", "index.js"]
+ENTRYPOINT ["node", "index.js"]
 ```
 
 ## Other tips
